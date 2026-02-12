@@ -111,6 +111,34 @@ header h1 {
     margin-bottom: 0;
 }
 
+/* New Chat Button */
+.new-chat-section {
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.new-chat-button {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.5rem 0;
+    width: 100%;
+    text-align: left;
+    transition: color 0.2s ease;
+    list-style: none;
+}
+
+.new-chat-button:hover,
+.new-chat-button:focus {
+    color: var(--primary-color);
+    outline: none;
+}
+
 /* Main Chat Area */
 .chat-main {
     flex: 1;
@@ -241,8 +269,28 @@ header h1 {
 }
 
 .sources-content {
-    padding: 0 0.5rem 0.25rem 1.5rem;
-    color: var(--text-secondary);
+    padding: 0.5rem 0.5rem 0.5rem 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.source-link {
+    display: inline-block;
+    padding: 0.4rem 0.75rem;
+    background: rgba(79, 172, 254, 0.1);
+    border: 1px solid rgba(79, 172, 254, 0.3);
+    border-radius: 20px;
+    color: #4facfe;
+    font-size: 0.8rem;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+a.source-link:hover {
+    background: rgba(79, 172, 254, 0.2);
+    border-color: #4facfe;
+    transform: translateY(-1px);
 }
 
 /* Markdown formatting styles */
