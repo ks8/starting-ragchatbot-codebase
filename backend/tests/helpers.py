@@ -15,7 +15,9 @@ def make_text_response(text: str) -> MagicMock:
     return response
 
 
-def make_tool_use_response(tool_name: str, tool_input: dict, tool_use_id: str = "toolu_01abc") -> MagicMock:
+def make_tool_use_response(
+    tool_name: str, tool_input: dict, tool_use_id: str = "toolu_01abc"
+) -> MagicMock:
     """Create a mock Anthropic API response that requests tool use."""
     tool_block = MagicMock()
     tool_block.type = "tool_use"

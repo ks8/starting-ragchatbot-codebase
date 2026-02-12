@@ -7,15 +7,19 @@ from tests.helpers import make_text_response, make_tool_use_response
 
 def _make_rag_system():
     """Create a RAGSystem with all external dependencies mocked."""
-    with patch('rag_system.VectorStore') as MockVS, \
-         patch('rag_system.AIGenerator') as MockAI, \
-         patch('rag_system.DocumentProcessor') as MockDP:
+    with (
+        patch("rag_system.VectorStore") as MockVS,
+        patch("rag_system.AIGenerator") as MockAI,
+        patch("rag_system.DocumentProcessor") as MockDP,
+    ):
 
         from config import Config
+
         config = Config()
         config.ANTHROPIC_API_KEY = "test-key"
 
         from rag_system import RAGSystem
+
         rag = RAGSystem(config)
 
     return rag
@@ -31,7 +35,10 @@ class TestRAGSystemQuery:
         rag.query("What is MCP?")
 
         call_kwargs = rag.ai_generator.generate_response.call_args.kwargs
-        assert call_kwargs["query"] == "Answer this question about course materials: What is MCP?"
+        assert (
+            call_kwargs["query"]
+            == "Answer this question about course materials: What is MCP?"
+        )
 
     def test_query_passes_tools_and_manager(self):
         """generate_response is called with tools list and tool_manager."""
@@ -66,7 +73,7 @@ class TestRAGSystemQuery:
 
         # Manually populate sources on the search tool to simulate a search
         for tool in rag.tool_manager.tools.values():
-            if hasattr(tool, 'last_sources'):
+            if hasattr(tool, "last_sources"):
                 tool.last_sources = ["Source 1", "Source 2"]
 
         _, sources = rag.query("test")

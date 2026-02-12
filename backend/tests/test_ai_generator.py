@@ -8,7 +8,7 @@ from tests.helpers import make_text_response, make_tool_use_response
 
 def _make_generator():
     """Create an AIGenerator with a mocked Anthropic client."""
-    with patch('ai_generator.anthropic.Anthropic') as MockAnthropic:
+    with patch("ai_generator.anthropic.Anthropic") as MockAnthropic:
         mock_client = MagicMock()
         MockAnthropic.return_value = mock_client
         generator = AIGenerator(api_key="test-key", model="test-model")
@@ -33,7 +33,13 @@ class TestGenerateResponse:
         generator, mock_client = _make_generator()
         mock_client.messages.create.return_value = make_text_response("Answer")
 
-        tools = [{"name": "search_course_content", "description": "Search", "input_schema": {}}]
+        tools = [
+            {
+                "name": "search_course_content",
+                "description": "Search",
+                "input_schema": {},
+            }
+        ]
         generator.generate_response(query="test", tools=tools)
 
         call_kwargs = mock_client.messages.create.call_args.kwargs
@@ -57,7 +63,7 @@ class TestGenerateResponse:
         generator, mock_client = _make_generator()
         mock_client.messages.create.side_effect = [
             make_tool_use_response("search_course_content", {"query": "MCP"}),
-            make_text_response("MCP is a protocol.")
+            make_text_response("MCP is a protocol."),
         ]
 
         mock_tm = MagicMock()
@@ -66,18 +72,22 @@ class TestGenerateResponse:
         result = generator.generate_response(
             query="What is MCP?",
             tools=[{"name": "search_course_content"}],
-            tool_manager=mock_tm
+            tool_manager=mock_tm,
         )
 
-        mock_tm.execute_tool.assert_called_once_with("search_course_content", query="MCP")
+        mock_tm.execute_tool.assert_called_once_with(
+            "search_course_content", query="MCP"
+        )
         assert result == "MCP is a protocol."
 
     def test_tool_result_sent_back_to_api(self):
         """Second API call includes tool_result messages with correct tool_use_id."""
         generator, mock_client = _make_generator()
         mock_client.messages.create.side_effect = [
-            make_tool_use_response("search_course_content", {"query": "MCP"}, tool_use_id="toolu_123"),
-            make_text_response("Final answer")
+            make_tool_use_response(
+                "search_course_content", {"query": "MCP"}, tool_use_id="toolu_123"
+            ),
+            make_text_response("Final answer"),
         ]
 
         mock_tm = MagicMock()
@@ -86,7 +96,7 @@ class TestGenerateResponse:
         generator.generate_response(
             query="What is MCP?",
             tools=[{"name": "search_course_content"}],
-            tool_manager=mock_tm
+            tool_manager=mock_tm,
         )
 
         # Second call should have tool results in messages
@@ -105,7 +115,7 @@ class TestGenerateResponse:
         generator, mock_client = _make_generator()
         mock_client.messages.create.side_effect = [
             make_tool_use_response("search_course_content", {"query": "MCP"}),
-            make_text_response("Final answer")
+            make_text_response("Final answer"),
         ]
 
         mock_tm = MagicMock()
@@ -114,7 +124,7 @@ class TestGenerateResponse:
         generator.generate_response(
             query="test",
             tools=[{"name": "search_course_content"}],
-            tool_manager=mock_tm
+            tool_manager=mock_tm,
         )
 
         second_call_kwargs = mock_client.messages.create.call_args_list[1].kwargs
@@ -146,7 +156,9 @@ class TestGenerateResponse:
         """When stop_reason='tool_use' but tool_manager=None, falls through to content[0].text.
         This is a potential bug — ToolUseBlock has no .text attribute."""
         generator, mock_client = _make_generator()
-        tool_response = make_tool_use_response("search_course_content", {"query": "MCP"})
+        tool_response = make_tool_use_response(
+            "search_course_content", {"query": "MCP"}
+        )
         mock_client.messages.create.return_value = tool_response
 
         # This should attempt response.content[0].text on a tool_use block.
@@ -170,7 +182,7 @@ class TestGenerateResponse:
         generator, mock_client = _make_generator()
         mock_client.messages.create.side_effect = [
             make_tool_use_response("search_course_content", {"query": "MCP"}),
-            Exception("Rate limited")
+            Exception("Rate limited"),
         ]
 
         mock_tm = MagicMock()
@@ -180,23 +192,31 @@ class TestGenerateResponse:
             generator.generate_response(
                 query="test",
                 tools=[{"name": "search_course_content"}],
-                tool_manager=mock_tm
+                tool_manager=mock_tm,
             )
 
     def test_two_sequential_tool_calls(self):
         """Happy path: outline → search → text. Both tools executed, 3 API calls."""
         generator, mock_client = _make_generator()
         mock_client.messages.create.side_effect = [
-            make_tool_use_response("get_course_outline", {"course_name": "AI"}, tool_use_id="toolu_1"),
-            make_tool_use_response("search_course_content", {"query": "transformers"}, tool_use_id="toolu_2"),
-            make_text_response("Transformers are covered in lesson 3.")
+            make_tool_use_response(
+                "get_course_outline", {"course_name": "AI"}, tool_use_id="toolu_1"
+            ),
+            make_tool_use_response(
+                "search_course_content",
+                {"query": "transformers"},
+                tool_use_id="toolu_2",
+            ),
+            make_text_response("Transformers are covered in lesson 3."),
         ]
 
         mock_tm = MagicMock()
         mock_tm.execute_tool.side_effect = ["outline data", "search results"]
 
         tools = [{"name": "get_course_outline"}, {"name": "search_course_content"}]
-        result = generator.generate_response(query="test", tools=tools, tool_manager=mock_tm)
+        result = generator.generate_response(
+            query="test", tools=tools, tool_manager=mock_tm
+        )
 
         assert result == "Transformers are covered in lesson 3."
         assert mock_tm.execute_tool.call_count == 2
@@ -206,9 +226,15 @@ class TestGenerateResponse:
         """Third API call (final round) does NOT contain 'tools'; second call DOES."""
         generator, mock_client = _make_generator()
         mock_client.messages.create.side_effect = [
-            make_tool_use_response("get_course_outline", {"course_name": "AI"}, tool_use_id="toolu_1"),
-            make_tool_use_response("search_course_content", {"query": "transformers"}, tool_use_id="toolu_2"),
-            make_text_response("Final answer")
+            make_tool_use_response(
+                "get_course_outline", {"course_name": "AI"}, tool_use_id="toolu_1"
+            ),
+            make_tool_use_response(
+                "search_course_content",
+                {"query": "transformers"},
+                tool_use_id="toolu_2",
+            ),
+            make_text_response("Final answer"),
         ]
 
         mock_tm = MagicMock()
@@ -230,7 +256,7 @@ class TestGenerateResponse:
         generator, mock_client = _make_generator()
         mock_client.messages.create.side_effect = [
             make_tool_use_response("search_course_content", {"query": "MCP"}),
-            make_text_response("Here is the answer.")
+            make_text_response("Here is the answer."),
         ]
 
         mock_tm = MagicMock()
@@ -239,7 +265,7 @@ class TestGenerateResponse:
         result = generator.generate_response(
             query="test",
             tools=[{"name": "search_course_content"}],
-            tool_manager=mock_tm
+            tool_manager=mock_tm,
         )
 
         assert result == "Here is the answer."
@@ -250,8 +276,10 @@ class TestGenerateResponse:
         """execute_tool raises → error sent as tool_result with is_error → follow-up has no tools."""
         generator, mock_client = _make_generator()
         mock_client.messages.create.side_effect = [
-            make_tool_use_response("search_course_content", {"query": "MCP"}, tool_use_id="toolu_err"),
-            make_text_response("Sorry, I could not retrieve results.")
+            make_tool_use_response(
+                "search_course_content", {"query": "MCP"}, tool_use_id="toolu_err"
+            ),
+            make_text_response("Sorry, I could not retrieve results."),
         ]
 
         mock_tm = MagicMock()
@@ -260,7 +288,7 @@ class TestGenerateResponse:
         result = generator.generate_response(
             query="test",
             tools=[{"name": "search_course_content"}],
-            tool_manager=mock_tm
+            tool_manager=mock_tm,
         )
 
         assert result == "Sorry, I could not retrieve results."
@@ -278,9 +306,13 @@ class TestGenerateResponse:
         """Third call has 5 messages: user, asst/tool1, user/result1, asst/tool2, user/result2."""
         generator, mock_client = _make_generator()
         mock_client.messages.create.side_effect = [
-            make_tool_use_response("get_course_outline", {"course_name": "AI"}, tool_use_id="toolu_A"),
-            make_tool_use_response("search_course_content", {"query": "lesson 4"}, tool_use_id="toolu_B"),
-            make_text_response("Final answer")
+            make_tool_use_response(
+                "get_course_outline", {"course_name": "AI"}, tool_use_id="toolu_A"
+            ),
+            make_tool_use_response(
+                "search_course_content", {"query": "lesson 4"}, tool_use_id="toolu_B"
+            ),
+            make_text_response("Final answer"),
         ]
 
         mock_tm = MagicMock()
@@ -293,11 +325,11 @@ class TestGenerateResponse:
         messages = third_call_kwargs["messages"]
 
         assert len(messages) == 5
-        assert messages[0]["role"] == "user"              # original query
-        assert messages[1]["role"] == "assistant"          # tool call 1
-        assert messages[2]["role"] == "user"               # tool result 1
-        assert messages[3]["role"] == "assistant"          # tool call 2
-        assert messages[4]["role"] == "user"               # tool result 2
+        assert messages[0]["role"] == "user"  # original query
+        assert messages[1]["role"] == "assistant"  # tool call 1
+        assert messages[2]["role"] == "user"  # tool result 1
+        assert messages[3]["role"] == "assistant"  # tool call 2
+        assert messages[4]["role"] == "user"  # tool result 2
 
         # Verify correct tool_use_ids
         assert messages[2]["content"][0]["tool_use_id"] == "toolu_A"
@@ -307,16 +339,22 @@ class TestGenerateResponse:
         """Even with 2 tool requests, only 2 executions occur and 3rd call has no tools."""
         generator, mock_client = _make_generator()
         mock_client.messages.create.side_effect = [
-            make_tool_use_response("search_course_content", {"query": "q1"}, tool_use_id="toolu_1"),
-            make_tool_use_response("search_course_content", {"query": "q2"}, tool_use_id="toolu_2"),
-            make_text_response("Done")
+            make_tool_use_response(
+                "search_course_content", {"query": "q1"}, tool_use_id="toolu_1"
+            ),
+            make_tool_use_response(
+                "search_course_content", {"query": "q2"}, tool_use_id="toolu_2"
+            ),
+            make_text_response("Done"),
         ]
 
         mock_tm = MagicMock()
         mock_tm.execute_tool.side_effect = ["r1", "r2"]
 
         tools = [{"name": "search_course_content"}]
-        result = generator.generate_response(query="test", tools=tools, tool_manager=mock_tm)
+        result = generator.generate_response(
+            query="test", tools=tools, tool_manager=mock_tm
+        )
 
         assert result == "Done"
         assert mock_tm.execute_tool.call_count == 2
