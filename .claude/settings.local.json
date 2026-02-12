@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python visualization.py:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nAdd CLAUDE.md with project guidance for Claude Code\n\nDocuments build commands, architecture overview, and query flow\nfor the RAG chatbot system.\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(node --version:*)",
+      "Bash(npx:*)",
+      "mcp__playwright__browser_navigate",
+      "mcp__playwright__browser_take_screenshot",
+      "Bash(ls:*)",
+      "Bash(uv sync:*)",
+      "Bash(uv run pytest:*)",
+      "Bash(uv run python:*)",
+      "Bash(git -C /Users/kirkswanson/PycharmProjects/DEMO/starting-ragchatbot-codebase status)",
+      "Bash(git -C /Users/kirkswanson/PycharmProjects/DEMO/starting-ragchatbot-codebase log --oneline -5)",
+      "Bash(git -C /Users/kirkswanson/PycharmProjects/DEMO/starting-ragchatbot-codebase diff)",
+      "Bash(git commit:*)"
+    ]
+  }
+}
